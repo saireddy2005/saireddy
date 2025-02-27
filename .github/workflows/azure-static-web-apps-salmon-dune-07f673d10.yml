@@ -1,0 +1,46 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_DUNE_07F673D10 }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          action: "upload"
+          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
+          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
+          app_location: "name: CI  on:    push:     paths-ignore:       - '**/*.md'   pull_request:     paths-ignore:       - '**/*.md'  jobs:    build:      runs-on: ubuntu-latest     strategy:       matrix:         # The MODULE environment variable is evaluated in build-all.sh to run a subset         # of the builds. This way, multiple modules can be built in parallel.         module: [ "module1", "module2", "module3", "module4", "module5", "module6", "module7" ]      steps:      - name: "Checkout sources"       uses: actions/checkout@v1      - name: "Setup Java"       uses: actions/setup-java@v1       with:         java-version: 13      - name: "Build module ${{ matrix.module }}"       env:         MODULE: ${{ matrix.module }}         # We don't actually need AWS credentials in the tests, but LocalStack         # complains if they're not there, so we add dummies to the environment.         AWS_ACCESS_KEY_ID: dummy         AWS_SECRET_ACCESS_KEY: dummy         AWS_REGION: us-east-1       run: |         chmod 755 build-all.sh && ./build-all.sh $MODULE      - name: "Zip build reports"       if: failure()       run: zip -r reports.zip **/**/build/reports      - uses: actions/upload-artifact@v1       name: "Upload build reports"       if: failure()       with:         name: reports         path: reports.zip" # App source code path
+          api_location: "api" # Api source code path - optional
+          output_location: "/name: CI  on:    push:     paths-ignore:       - '**/*.md'   pull_request:     paths-ignore:       - '**/*.md'  jobs:    build:      runs-on: ubuntu-latest     strategy:       matrix:         # The MODULE environment variable is evaluated in build-all.sh to run a subset         # of the builds. This way, multiple modules can be built in parallel.         module: [ "module1", "module2", "module3", "module4", "module5", "module6", "module7" ]      steps:      - name: "Checkout sources"       uses: actions/checkout@v1      - name: "Setup Java"       uses: actions/setup-java@v1       with:         java-version: 13      - name: "Build module ${{ matrix.module }}"       env:         MODULE: ${{ matrix.module }}         # We don't actually need AWS credentials in the tests, but LocalStack         # complains if they're not there, so we add dummies to the environment.         AWS_ACCESS_KEY_ID: dummy         AWS_SECRET_ACCESS_KEY: dummy         AWS_REGION: us-east-1       run: |         chmod 755 build-all.sh && ./build-all.sh $MODULE      - name: "Zip build reports"       if: failure()       run: zip -r reports.zip **/**/build/reports      - uses: actions/upload-artifact@v1       name: "Upload build reports"       if: failure()       with:         name: reports         path: reports.zip" # Built app content directory - optional
+          ###### End of Repository/Build Configurations ######
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_DUNE_07F673D10 }}
+          action: "close"
